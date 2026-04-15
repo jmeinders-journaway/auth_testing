@@ -13,7 +13,22 @@ class AuthController {
     });
   }
 
-  public async signIn(req: Request, res: Response) {}
+  public async signIn(req: Request, res: Response) {
+    const { email, password } = req.body;
+    const authData = await authService.signIn(email, password);
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Sign in successfully',
+      data: authData
+    });
+  }
+
+  public async protected(req: Request, res: Response) {
+    res.status(HTTP_STATUS.OK).json({
+      message: 'This is a protected route',
+      data: req.currentUser
+    });
+  }
 
   public async getCurrentUser(req: Request, res: Response) {}
 
