@@ -4,6 +4,7 @@ import 'dotenv/config';
 import appRoutes from './globals/routes/appRoutes';
 import { CustomError, NotFoundException } from './globals/cores/error.core';
 import HTTP_STATUS from './globals/constants/http.constant';
+import mongoose from 'mongoose';
 
 class Server {
   private app: Application;
@@ -17,6 +18,7 @@ class Server {
     this.setupRoutes();
     this.setupGlobalError();
     this.listenServer();
+    this.SetUpDatabase();
   }
 
   private setupMiddleware(): void {
@@ -46,6 +48,12 @@ class Server {
         message: 'Something went wrong!'
       });
     });
+  }
+
+  private SetUpDatabase(): void {
+    mongoose.connect(process.env.MONGODB_URL!)
+      .then(() => console.log('Connected to database successfully'))
+      .catch((error) => console.error('Database connection error:', error));
   }
 
   private listenServer() {
