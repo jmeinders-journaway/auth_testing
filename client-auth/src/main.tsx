@@ -4,14 +4,14 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
-import App from './App.tsx';
+import AssetPage from './pages/asset/asset-page.tsx';
 import SignInPage from './pages/sign-in/sign-in-page.tsx';
 import SignUpPage from './pages/sign-up/sign-up-page.tsx';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />
+    element: <Navigate to='/sign-in' replace />
   },
   {
     path: '/sign-in',
@@ -20,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: '/sign-up',
     element: <SignUpPage />
+  },
+  {
+    path: '/asset',
+    element: <AssetPage />
   },
   {
     path: '*',

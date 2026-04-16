@@ -1,6 +1,6 @@
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import apiLayer from '../../api';
 import {
@@ -16,13 +16,16 @@ const { Title, Paragraph } = Typography;
 
 export default function SignInPage() {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const onFinish = async (values: any) => {
     const response = await apiLayer.signIn(values);
     if (response) {
       console.log('Sign in success:', response);
       console.table(response.data?.user || {});
+      localStorage.setItem('accessToken', response.data.accessToken);
       toast.success('Login successfully');
+      navigate('/asset');
     }
   };
 

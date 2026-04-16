@@ -1,6 +1,8 @@
 import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { toast } from 'react-toastify';
+import apiLayer from '../../api';
 import {
   cardStyle,
   containerStyle,
@@ -14,10 +16,15 @@ const { Title, Paragraph } = Typography;
 
 export default function SignUpPage() {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
-  const onFinish = (values: any) => {
-    console.log('Success:', values);
-    // send the data to your backend
+  const onFinish = async (values: any) => {
+    const response = await apiLayer.signUp(values);
+    if (response) {
+      toast.success('Account created successfully');
+      form.resetFields();
+      navigate('/sign-in');
+    }
   };
 
   return (
