@@ -1,11 +1,5 @@
-import SignUpPage from './pages/sign-up/sign-up-page';
-
 function App() {
-  return (
-    <>
-      <SignUpPage />
-    </>
-  );
+  return <div>App page</div>;
 }
 
 export default App;

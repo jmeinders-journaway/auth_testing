@@ -1,5 +1,6 @@
 import express, { Application, NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import 'dotenv/config';
 import appRoutes from './globals/routes/appRoutes';
 import { CustomError, NotFoundException } from './globals/cores/error.core';
@@ -22,6 +23,12 @@ class Server {
   }
 
   private setupMiddleware(): void {
+    // Allow requests from client app URL (or all origins if not provided).
+    this.app.use(
+      cors({
+        origin: process.env.CLIENT_URL || '*'
+      })
+    );
     this.app.use(express.json());
     this.app.use(cookieParser());
   }

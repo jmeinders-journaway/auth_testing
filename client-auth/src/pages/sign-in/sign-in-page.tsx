@@ -1,5 +1,8 @@
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
+import { Link } from 'react-router';
+import { toast } from 'react-toastify';
+import apiLayer from '../../api';
 import {
   cardStyle,
   containerStyle,
@@ -14,9 +17,13 @@ const { Title, Paragraph } = Typography;
 export default function SignInPage() {
   const [form] = Form.useForm();
 
-  const onFinish = (values: any) => {
-    console.log('Success:', values);
-    // send the data to your backend
+  const onFinish = async (values: any) => {
+    const response = await apiLayer.signIn(values);
+    if (response) {
+      console.log('Sign in success:', response);
+      console.table(response.data?.user || {});
+      toast.success('Login successfully');
+    }
   };
 
   return (
@@ -78,7 +85,7 @@ export default function SignInPage() {
 
         <div style={footerStyle}>
           <Paragraph style={{ color: 'rgba(0, 0, 0, 0.45)' }}>
-            Don't have an account? <a href='/login'>Sign Up</a>
+            Don't have an account? <Link to='/sign-up'>Sign Up</Link>
           </Paragraph>
         </div>
       </Card>

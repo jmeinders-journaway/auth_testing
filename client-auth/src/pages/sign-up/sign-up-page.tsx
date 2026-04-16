@@ -1,5 +1,6 @@
 import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
+import { Link } from 'react-router';
 import {
   cardStyle,
   containerStyle,
@@ -92,7 +93,7 @@ export default function SignUpPage() {
 
         <div style={footerStyle}>
           <Paragraph style={{ color: 'rgba(0, 0, 0, 0.45)' }}>
-            Already have an account? <a href='/login'>Log in</a>
+            Already have an account? <Link to='/sign-in'>Log in</Link>
           </Paragraph>
         </div>
       </Card>
