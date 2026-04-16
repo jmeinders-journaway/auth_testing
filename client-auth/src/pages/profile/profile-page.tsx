@@ -1,35 +1,40 @@
-'use client';
-
 import { MailOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Card, Divider, Form, Input, Typography, message } from 'antd';
-import { useState } from 'react';
+import { Avatar, Card, Divider, Typography } from 'antd';
+import { useMemo } from 'react';
 
 const { Title, Paragraph, Text } = Typography;
-const { TextArea } = Input;
+
+interface StoredUser {
+  name: string;
+  email: string;
+}
 
 export default function ProfilePage() {
-  const [form] = Form.useForm();
+  const userData = useMemo<StoredUser>(() => {
+    // Read and parse user data from localStorage safely.
+    const userFromStorage = localStorage.getItem('user');
+    if (!userFromStorage) {
+      return {
+        name: 'Guest User',
+        email: 'No email available'
+      };
+    }
 
-  // Mock user data
-  const [userData, setUserData] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@example.com',
-    bio: 'Frontend developer passionate about creating intuitive user experiences. I love working with React and exploring new technologies.',
-    avatarUrl: '/placeholder.svg?height=200&width=200',
-  });
+    try {
+      const parsedUser = JSON.parse(userFromStorage) as Partial<StoredUser>;
+      return {
+        name: parsedUser.name || 'Guest User',
+        email: parsedUser.email || 'No email available'
+      };
+    } catch {
+      return {
+        name: 'Guest User',
+        email: 'No email available'
+      };
+    }
+  }, []);
 
-  const handleSave = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        setUserData({ ...userData, ...values });
-        message.success('Profile updated successfully!');
-      })
-      .catch((info) => {
-        message.error('Validation failed. Please check your inputs.');
-      });
-  };
-
+  
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
       <Card style={{ borderRadius: '8px' }}>
@@ -44,7 +49,6 @@ export default function ProfilePage() {
           <Avatar
             size={120}
             icon={<UserOutlined />}
-            src={userData.avatarUrl}
             style={{ marginBottom: '16px' }}
           />
 
@@ -58,7 +62,7 @@ export default function ProfilePage() {
             </Text>
             <Divider style={{ margin: '16px 0' }} />
             <Paragraph style={{ maxWidth: '600px', textAlign: 'left' }}>
-              {userData.bio}
+            'No bio available'
             </Paragraph>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import AssetPage from './pages/asset/asset-page.tsx';
+import ProfilePage from './pages/profile/profile-page.tsx';
 import SignInPage from './pages/sign-in/sign-in-page.tsx';
 import SignUpPage from './pages/sign-up/sign-up-page.tsx';
 
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: '/asset',
     element: <AssetPage />
+  },
+  {
+    path: '/profile',
+    element: <ProfilePage />
   },
   {
     path: '*',

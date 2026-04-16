@@ -24,8 +24,9 @@ export default function SignInPage() {
       console.log('Sign in success:', response);
       console.table(response.data?.user || {});
       localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       toast.success('Login successfully');
-      navigate('/asset');
+      navigate('/profile');
     }
   };
 

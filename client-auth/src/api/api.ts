@@ -5,9 +5,23 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050'
 });
 
+const PUBLIC_AUTH_ROUTES = ['/api/v1/auth/sign-in', '/api/v1/auth/signup'];
+const PUBLIC_CLIENT_PATHS = ['/sign-in', '/sign-up'];
+
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Request interceptor runs before every API request is sent.
+    // Skip attaching token for public auth routes.
+    const requestUrl = config.url || '';
+    const isPublicAuthRoute = PUBLIC_AUTH_ROUTES.some((route) => requestUrl.includes(route));
+    // location.pathname is a browser global that tells us current client route.
+    const currentPathName = window.location.pathname;
+    const isPublicClientPath = PUBLIC_CLIENT_PATHS.includes(currentPathName);
+    if (isPublicAuthRoute || isPublicClientPath) {
+      return config;
+    }
+
+    // Attach bearer token to protected requests only.
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -23,7 +37,7 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError<{ message?: string }>) => {
-    // Centralized error handling for all API calls.
+    // Handle API errors in one centralized place.
     const errorMessage = error.response?.data?.message || 'Something went wrong';
     toast.error(errorMessage);
     return Promise.reject(error);
