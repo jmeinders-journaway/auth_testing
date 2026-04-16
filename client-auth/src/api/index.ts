@@ -1,16 +1,14 @@
 import api from './api';
+import type { IUser } from '../types/user';
 
 export interface SignInPayload {
   email: string;
   password: string;
 }
 
-interface SignInResponse {
-  message: string;
-  data: {
-    accessToken: string;
-    user: Record<string, unknown>;
-  };
+export interface AuthSuccessResponse {
+  accessToken: string;
+  user: IUser;
 }
 
 export interface SignUpPayload {
@@ -21,22 +19,17 @@ export interface SignUpPayload {
 
 interface SignUpResponse {
   message: string;
-  data: {
-    accessToken: string;
-    user: Record<string, unknown>;
-  };
 }
 
 interface ProtectedResponse {
   message: string;
-  data: Record<string, unknown>;
 }
 
 const apiLayer = {
-  async signIn(payload: SignInPayload): Promise<SignInResponse | null> {
+  async signIn(payload: SignInPayload): Promise<AuthSuccessResponse | null> {
     try {
-      const response = await api.post<SignInResponse>('/api/v1/auth/sign-in', payload);
-      return response.data;
+      const response = await api.post<AuthSuccessResponse>('/api/v1/auth/sign-in', payload);
+      return response as unknown as AuthSuccessResponse;
     } catch {
       return null;
     }
@@ -44,7 +37,7 @@ const apiLayer = {
   async signUp(payload: SignUpPayload): Promise<SignUpResponse | null> {
     try {
       const response = await api.post<SignUpResponse>('/api/v1/auth/signup', payload);
-      return response.data;
+      return response as unknown as SignUpResponse;
     } catch {
       return null;
     }
@@ -52,7 +45,7 @@ const apiLayer = {
   async getProtected(): Promise<ProtectedResponse | null> {
     try {
       const response = await api.get<ProtectedResponse>('/api/v1/auth/protected');
-      return response.data;
+      return response as unknown as ProtectedResponse;
     } catch {
       return null;
     }

@@ -2,7 +2,7 @@ import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import apiLayer from '../../api';
+import apiLayer, { type SignUpPayload } from '../../api';
 import {
   cardStyle,
   containerStyle,
@@ -18,7 +18,7 @@ export default function SignUpPage() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: SignUpPayload) => {
     const response = await apiLayer.signUp(values);
     if (response) {
       toast.success('Account created successfully');

@@ -8,6 +8,8 @@ import AssetPage from './pages/asset/asset-page.tsx';
 import ProfilePage from './pages/profile/profile-page.tsx';
 import SignInPage from './pages/sign-in/sign-in-page.tsx';
 import SignUpPage from './pages/sign-up/sign-up-page.tsx';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
 
 const router = createBrowserRouter([
   {
@@ -38,7 +40,9 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
-    <ToastContainer />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+      <ToastContainer />
+    </Provider>
   </StrictMode>
 );

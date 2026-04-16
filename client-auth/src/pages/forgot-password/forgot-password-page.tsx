@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = () => {
     setLoading(true);
 
     // call to request password reset

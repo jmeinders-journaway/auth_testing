@@ -2,7 +2,9 @@ import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import apiLayer from '../../api';
+import apiLayer, { type SignInPayload } from '../../api';
+import { useAppDispatch } from '../../redux/hooks';
+import { setAuth } from '../../redux/authSlice';
 import {
   cardStyle,
   containerStyle,
@@ -17,14 +19,22 @@ const { Title, Paragraph } = Typography;
 export default function SignInPage() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: SignInPayload) => {
     const response = await apiLayer.signIn(values);
     if (response) {
       console.log('Sign in success:', response);
-      console.table(response.data?.user || {});
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      console.table(response.user || {});
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem('isAuthenticated', 'true');
+      dispatch(
+        setAuth({
+          accessToken: response.accessToken,
+          user: response.user,
+        }),
+      );
       toast.success('Login successfully');
       navigate('/profile');
     }

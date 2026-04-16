@@ -34,7 +34,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // Response interceptor can transform or normalize successful responses.
-    return response;
+    return response.data;
   },
   (error: AxiosError<{ message?: string }>) => {
     // Handle API errors in one centralized place.

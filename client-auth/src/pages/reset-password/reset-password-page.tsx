@@ -10,7 +10,7 @@ export default function ResetPasswordPage() {
 
   const userEmail = 'user@example.com';
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = () => {
     setLoading(true);
 
     // call to reset password
