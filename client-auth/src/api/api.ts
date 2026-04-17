@@ -7,9 +7,41 @@ import { store } from '../redux/store';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050'
 });
+const refreshClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050'
+});
 
-const PUBLIC_AUTH_ROUTES = ['/api/v1/auth/sign-in', '/api/v1/auth/signup'];
+const PUBLIC_AUTH_ROUTES = ['/api/v1/auth/sign-in', '/api/v1/auth/signup', '/api/v1/auth/refresh-token'];
 const PUBLIC_CLIENT_PATHS = ['/sign-in', '/sign-up'];
+const TOKEN_EXPIRED_CODE = 'TOKEN_EXPIRED';
+
+interface ErrorResponse {
+  code?: string;
+  message?: string;
+}
+
+interface RefreshTokenResponse {
+  data: {
+    accessToken: string;
+  };
+}
+
+interface RetryableAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+function clearLocalAuthStorage() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+  localStorage.removeItem('isAuthenticated');
+}
+
+function redirectToSignIn() {
+  clearLocalAuthStorage();
+  store.dispatch(clearAuth());
+  import('../main').then(({ router }) => router.navigate('/sign-in'));
+}
 
 /**
  * REQUEST INTERCEPTOR
@@ -77,13 +109,43 @@ api.interceptors.response.use(
      * Note: No toast error shown to avoid confusion
      * (silent redirect is better UX)
      */
-  (error: AxiosError<{ message?: string }>) => {
-    if (error.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('isAuthenticated');
-      store.dispatch(clearAuth());
-      import('../main').then(({ router }) => router.navigate('/sign-in'));
+  async (error: AxiosError<ErrorResponse>) => {
+    const status = error.response?.status;
+    const errorCode = error.response?.data?.code;
+    const originalRequest = error.config as RetryableAxiosRequestConfig | undefined;
+
+    if (
+      status === 401 &&
+      errorCode === TOKEN_EXPIRED_CODE &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        redirectToSignIn();
+        return Promise.reject(error);
+      }
+
+      try {
+        const refreshResponse = await refreshClient.post<RefreshTokenResponse>(
+          '/api/v1/auth/refresh-token',
+          {refreshToken}
+        );
+
+        const newAccessToken = refreshResponse.data.data.accessToken;
+        localStorage.setItem('accessToken', newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        redirectToSignIn();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    if (status === 401) {
+      redirectToSignIn();
       return Promise.reject(error);
     }
       /**

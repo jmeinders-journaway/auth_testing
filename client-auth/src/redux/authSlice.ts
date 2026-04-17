@@ -16,12 +16,14 @@ import { emptyUser, type IUser } from '../types/user';
 export interface AuthState {
   isAuthenticated: boolean;
   accessToken: string | null;
+  refreshToken: string | null;
   user: IUser;
 }
 
 export const initialAuthState: AuthState = {
   isAuthenticated: false,
   accessToken: null,
+  refreshToken: null,
   user: emptyUser,
 };
 
@@ -58,16 +60,19 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{
         accessToken: string;
+        refreshToken: string;
         user: IUser;
       }>,
     ) {
       state.isAuthenticated = true;
       state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
       state.user = normalizeUser(action.payload.user ?? {});
     },
     clearAuth(state) {
       state.isAuthenticated = false;
       state.accessToken = null;
+      state.refreshToken = null;
       state.user = emptyUser;
     },
     setUser(state, action: PayloadAction<Partial<IUser>>) {

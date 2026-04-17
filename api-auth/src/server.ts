@@ -47,6 +47,7 @@ class Server {
       console.log('check error', error);
       if (error instanceof CustomError) {
         return res.status(error.statusCode).json({
+          code: error.errorCode || 'UNKNOWN_ERROR',
           message: error.message
         });
       }

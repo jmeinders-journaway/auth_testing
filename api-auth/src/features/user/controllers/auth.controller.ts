@@ -55,6 +55,16 @@ class AuthController {
     });
   }
 
+  public async refreshToken(req: Request, res: Response) {
+    const {refreshToken} = req.body;
+    const token = await authService.refreshToken(refreshToken);
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Refresh token successfully',
+      data: token
+    });
+  }
+
   /**
    * GET /api/v1/auth/protected
    * Example protected route that requires valid JWT token

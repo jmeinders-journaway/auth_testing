@@ -10,6 +10,7 @@ export interface AuthSuccessResponse {
   message: string;
   data: {
     accessToken: string;
+    refreshToken: string;
     user: IUser;
   };
 }
@@ -23,6 +24,17 @@ export interface SignUpPayload {
 
 interface ProtectedResponse {
   message: string;
+}
+
+interface RefreshTokenPayload {
+  refreshToken: string;
+}
+
+interface RefreshTokenResponse {
+  message: string;
+  data: {
+    accessToken: string;
+  };
 }
 
 const apiLayer = {
@@ -46,6 +58,14 @@ const apiLayer = {
     try {
       const response = await api.get<ProtectedResponse>('/api/v1/auth/protected');
       return response as unknown as ProtectedResponse;
+    } catch {
+      return null;
+    }
+  },
+  async refreshToken(payload: RefreshTokenPayload): Promise<RefreshTokenResponse | null> {
+    try {
+      const response = await api.post<RefreshTokenResponse>('/api/v1/auth/refresh-token', payload);
+      return response as unknown as RefreshTokenResponse;
     } catch {
       return null;
     }

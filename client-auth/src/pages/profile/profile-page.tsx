@@ -13,6 +13,7 @@ export default function ProfilePage() {
 
   const handleLogOut = () => {
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
     dispatch(clearAuth());

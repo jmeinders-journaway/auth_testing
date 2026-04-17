@@ -41,8 +41,14 @@ export default function SignInPage() {
   const onFinish = async (values: SignInPayload) => {
     const response = await apiLayer.signIn(values);
     if (response) {
+      if (!response.data.refreshToken || response.data.refreshToken === 'undefined') {
+        toast.error('Login response is missing refresh token. Please restart backend and try again.');
+        return;
+      }
+
       //at this point persists data with local storage, will be updated later
       localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('isAuthenticated', 'true');
       // This triggers:
@@ -52,6 +58,7 @@ export default function SignInPage() {
       dispatch(
         setAuth({
           accessToken: response.data.accessToken,
+          refreshToken: response.data.refreshToken,
           user: response.data.user,
         }),
       );
