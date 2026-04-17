@@ -18,15 +18,37 @@ const { Title, Paragraph } = Typography;
 
 export default function SignInPage() {
   const [form] = Form.useForm();
+  //this allows to navigate between routes without links
+  //Examples: navigate('/profile'), navigate('/sign-up'), navigate(-1) for back
   const navigate = useNavigate();
+  //allows to dispatch actions to redux store
   const dispatch = useAppDispatch();
 
+  /**
+   * Form Submission Handler
+   * Triggered when user clicks "Log In" button and validation passes
+   *
+   * @param values - Contains { email, password } from form fields
+   *
+   * Complete Authentication Flow:
+   * 1. Send credentials to backend API
+   * 2. Receive JWT token + user data
+   * 3. Persist auth state in localStorage (survives page refresh)
+   * 4. Update Redux store (triggers UI updates)
+   * 5. Show success feedback
+   * 6. Redirect to protected profile page
+   */
   const onFinish = async (values: SignInPayload) => {
     const response = await apiLayer.signIn(values);
     if (response) {
+      //at this point persists data with local storage, will be updated later
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('isAuthenticated', 'true');
+      // This triggers:
+      // - AuthSlice state update
+      // - components using useAuth() or useSelector re-render depending on IsAuthenticated update
+      // - Protected routes become accessible
       dispatch(
         setAuth({
           accessToken: response.data.accessToken,

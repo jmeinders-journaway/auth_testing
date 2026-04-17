@@ -1,5 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { emptyUser, type IUser } from '../types/user';
+/**
+ * Redux Auth Slice - Authentication State Management
+ *
+ * Purpose: Manages authentication state throughout the React application
+ *
+ * Key Responsibilities:
+ * 1. Store authentication status (logged in or not)
+ * 2. Store JWT token for API requests
+ * 3. Store user profile information
+ * 4. Provide reducers to update auth state
+ * 5. Normalize and validate user data before storing
+ */
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -37,7 +49,7 @@ function normalizeUser(
     userType: userType ?? emptyUser.userType,
   };
 }
-
+//creates redux slice (part of redux store which manages authentication state)
 const authSlice = createSlice({
   name: 'auth',
   initialState: initialAuthState,
