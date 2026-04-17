@@ -1,5 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
+import { clearAuth } from '../redux/authSlice';
+import { store } from '../redux/store';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050'
@@ -37,7 +39,14 @@ api.interceptors.response.use(
     return response.data;
   },
   (error: AxiosError<{ message?: string }>) => {
-    // Handle API errors in one centralized place.
+    if (error.status === 401) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
+      store.dispatch(clearAuth());
+      import('../main').then(({ router }) => router.navigate('/sign-in'));
+      return Promise.reject(error);
+    }
     const errorMessage = error.response?.data?.message || 'Something went wrong';
     toast.error(errorMessage);
     return Promise.reject(error);

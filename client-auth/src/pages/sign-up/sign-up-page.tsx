@@ -3,6 +3,8 @@ import { Button, Card, Form, Input, Typography } from 'antd';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import apiLayer, { type SignUpPayload } from '../../api';
+import { useAppDispatch } from '../../redux/hooks';
+import { setAuth } from '../../redux/authSlice';
 import {
   cardStyle,
   containerStyle,
@@ -17,13 +19,17 @@ const { Title, Paragraph } = Typography;
 export default function SignUpPage() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const onFinish = async (values: SignUpPayload) => {
     const response = await apiLayer.signUp(values);
     if (response) {
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('isAuthenticated', 'true');
+      dispatch(setAuth({ accessToken: response.data.accessToken, user: response.data.user }));
       toast.success('Account created successfully');
-      form.resetFields();
-      navigate('/sign-in');
+      navigate('/profile');
     }
   };
 

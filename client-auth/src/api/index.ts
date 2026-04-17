@@ -7,8 +7,11 @@ export interface SignInPayload {
 }
 
 export interface AuthSuccessResponse {
-  accessToken: string;
-  user: IUser;
+  message: string;
+  data: {
+    accessToken: string;
+    user: IUser;
+  };
 }
 
 export interface SignUpPayload {
@@ -17,9 +20,6 @@ export interface SignUpPayload {
   password: string;
 }
 
-interface SignUpResponse {
-  message: string;
-}
 
 interface ProtectedResponse {
   message: string;
@@ -34,10 +34,10 @@ const apiLayer = {
       return null;
     }
   },
-  async signUp(payload: SignUpPayload): Promise<SignUpResponse | null> {
+  async signUp(payload: SignUpPayload): Promise<AuthSuccessResponse | null> {
     try {
-      const response = await api.post<SignUpResponse>('/api/v1/auth/signup', payload);
-      return response as unknown as SignUpResponse;
+      const response = await api.post<AuthSuccessResponse>('/api/v1/auth/signup', payload);
+      return response as unknown as AuthSuccessResponse;
     } catch {
       return null;
     }

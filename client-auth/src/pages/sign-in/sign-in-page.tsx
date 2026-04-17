@@ -24,15 +24,13 @@ export default function SignInPage() {
   const onFinish = async (values: SignInPayload) => {
     const response = await apiLayer.signIn(values);
     if (response) {
-      console.log('Sign in success:', response);
-      console.table(response.user || {});
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('isAuthenticated', 'true');
       dispatch(
         setAuth({
-          accessToken: response.accessToken,
-          user: response.user,
+          accessToken: response.data.accessToken,
+          user: response.data.user,
         }),
       );
       toast.success('Login successfully');

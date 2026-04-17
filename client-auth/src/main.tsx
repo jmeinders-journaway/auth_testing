@@ -10,27 +10,29 @@ import SignInPage from './pages/sign-in/sign-in-page.tsx';
 import SignUpPage from './pages/sign-up/sign-up-page.tsx';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
+import ProtectedRoute from './routes/protected-route.tsx';
+import PublicRoute from './routes/public-route.tsx';
 
-const router = createBrowserRouter([
+export const router = createBrowserRouter([
   {
     path: '/',
     element: <Navigate to='/sign-in' replace />
   },
   {
     path: '/sign-in',
-    element: <SignInPage />
+    element: <PublicRoute><SignInPage /></PublicRoute>
   },
   {
     path: '/sign-up',
-    element: <SignUpPage />
+    element: <PublicRoute><SignUpPage /></PublicRoute>
   },
   {
     path: '/asset',
-    element: <AssetPage />
+    element: <ProtectedRoute><AssetPage /></ProtectedRoute>
   },
   {
     path: '/profile',
-    element: <ProfilePage />
+    element: <ProtectedRoute><ProfilePage /></ProtectedRoute>
   },
   {
     path: '*',
