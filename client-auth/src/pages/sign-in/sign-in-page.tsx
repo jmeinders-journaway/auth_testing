@@ -52,6 +52,7 @@ export default function SignInPage() {
       dispatch(
         setAuth({
           accessToken: response.data.accessToken,
+          refreshToken: null,
           user: response.data.user,
         }),
       );

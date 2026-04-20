@@ -27,7 +27,13 @@ export default function SignUpPage() {
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('isAuthenticated', 'true');
-      dispatch(setAuth({ accessToken: response.data.accessToken, user: response.data.user }));
+      dispatch(
+        setAuth({
+          accessToken: response.data.accessToken,
+          refreshToken: null,
+          user: response.data.user
+        })
+      );
       toast.success('Account created successfully');
       navigate('/profile');
     }

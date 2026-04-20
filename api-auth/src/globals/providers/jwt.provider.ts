@@ -10,7 +10,18 @@ class JwtProvider {
     }
 
     return jwt.sign(payload, jwtSecret, {
-      expiresIn: '1h'
+      expiresIn: '20s'
+    });
+  }
+
+  public generateRefreshToken(payload: UserJwtPayload) {
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+    if (!refreshTokenSecret) {
+      throw new InternalServerError('Refresh token secret is missing');
+    }
+
+    return jwt.sign(payload, refreshTokenSecret, {
+      expiresIn: '7d'
     });
   }
 
@@ -21,6 +32,15 @@ class JwtProvider {
     }
 
     return jwt.verify(token, jwtSecret) as UserJwtPayload;
+  }
+
+  public verifyRefreshToken(refreshToken: string): UserJwtPayload {
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+    if (!refreshTokenSecret) {
+      throw new InternalServerError('Refresh token secret is missing');
+    }
+
+    return jwt.verify(refreshToken, refreshTokenSecret) as UserJwtPayload;
   }
 }
 

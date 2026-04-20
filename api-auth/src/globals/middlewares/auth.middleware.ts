@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { UnAuthorizedException } from '../cores/error.core';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { ForbiddenException, UnAuthorizedException } from '../cores/error.core';
 import { jwtProvider } from '../providers/jwt.provider';
 
 class AuthMiddleware {
@@ -8,14 +9,22 @@ class AuthMiddleware {
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      throw new UnAuthorizedException('You are not authenticated');
+      throw new UnAuthorizedException('No token provided', 'NO_TOKEN');
     }
 
     try {
       // Pass decoded user data from middleware to controller via request object.
       req.currentUser = jwtProvider.verifyToken(token);
     } catch (error) {
-      throw new UnAuthorizedException('Please login again');
+      if (error instanceof TokenExpiredError) {
+        throw new UnAuthorizedException('Token expired', 'TOKEN_EXPIRED');
+      }
+
+      if (error instanceof JsonWebTokenError) {
+        throw new ForbiddenException('Token invalid', 'TOKEN_INVALID');
+      }
+
+      throw new UnAuthorizedException('Please login again', 'UNAUTHORIZED');
     }
 
     next();

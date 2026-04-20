@@ -25,6 +25,18 @@ interface ProtectedResponse {
   message: string;
 }
 
+interface RefreshTokenResponse {
+  message: string;
+  data: {
+    accessToken: string;
+    user: IUser;
+  };
+}
+
+interface LogoutResponse {
+  message: string;
+}
+
 const apiLayer = {
   async signIn(payload: SignInPayload): Promise<AuthSuccessResponse | null> {
     try {
@@ -46,6 +58,22 @@ const apiLayer = {
     try {
       const response = await api.get<ProtectedResponse>('/api/v1/auth/protected');
       return response as unknown as ProtectedResponse;
+    } catch {
+      return null;
+    }
+  },
+  async refreshToken(): Promise<RefreshTokenResponse | null> {
+    try {
+      const response = await api.post<RefreshTokenResponse>('/api/v1/auth/refresh-token');
+      return response as unknown as RefreshTokenResponse;
+    } catch {
+      return null;
+    }
+  },
+  async logout(): Promise<LogoutResponse | null> {
+    try {
+      const response = await api.post<LogoutResponse>('/api/v1/auth/logout');
+      return response as unknown as LogoutResponse;
     } catch {
       return null;
     }

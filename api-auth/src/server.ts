@@ -26,7 +26,8 @@ class Server {
     // Allow requests from client app URL (or all origins if not provided).
     this.app.use(
       cors({
-        origin: process.env.CLIENT_URL || '*'
+        origin: process.env.CLIENT_URL || 'http://localhost:5173',
+        credentials: true
       })
     );
     this.app.use(express.json());
@@ -47,6 +48,7 @@ class Server {
       console.log('check error', error);
       if (error instanceof CustomError) {
         return res.status(error.statusCode).json({
+          code: error.errorCode || 'UNKNOWN_ERROR',
           message: error.message
         });
       }

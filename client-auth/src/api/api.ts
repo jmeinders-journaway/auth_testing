@@ -1,15 +1,61 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
-import { clearAuth } from '../redux/authSlice';
+import { clearAuth, setAuth } from '../redux/authSlice';
 import { store } from '../redux/store';
+import type { IUser } from '../types/user';
 
-//creates Axios instance (library for making http request)
+//creates Axios instance (library for making http request
+//includes interceptors for automatic token refresh
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050'
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050',
+  withCredentials: true
 });
 
-const PUBLIC_AUTH_ROUTES = ['/api/v1/auth/sign-in', '/api/v1/auth/signup'];
+/**
+ * client for token refresh requests.
+ *
+ * Why separate client?
+ * Using the main `api` client for refresh would cause infinite loops:
+ * Main client gets 401 -> tries to refresh
+ * Refresh request also fails with 401 -> tries to refresh again
+ */
+const refreshClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050',
+  withCredentials: true
+});
+
+const PUBLIC_AUTH_ROUTES = ['/api/v1/auth/sign-in', '/api/v1/auth/signup', '/api/v1/auth/refresh-token'];
 const PUBLIC_CLIENT_PATHS = ['/sign-in', '/sign-up'];
+const TOKEN_EXPIRED_CODE = 'TOKEN_EXPIRED';
+
+interface ErrorResponse {
+  code?: string;
+  message?: string;
+}
+
+interface RefreshTokenResponse {
+  data: {
+    accessToken: string;
+    user: IUser;
+  };
+}
+
+interface RetryableAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+function clearLocalAuthStorage() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+  localStorage.removeItem('isAuthenticated');
+}
+
+function redirectToSignIn() {
+  clearLocalAuthStorage();
+  store.dispatch(clearAuth());
+  import('../main').then(({ router }) => router.navigate('/sign-in'));
+}
 
 /**
  * REQUEST INTERCEPTOR
@@ -77,13 +123,45 @@ api.interceptors.response.use(
      * Note: No toast error shown to avoid confusion
      * (silent redirect is better UX)
      */
-  (error: AxiosError<{ message?: string }>) => {
-    if (error.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('isAuthenticated');
-      store.dispatch(clearAuth());
-      import('../main').then(({ router }) => router.navigate('/sign-in'));
+  async (error: AxiosError<ErrorResponse>) => {
+    const status = error.response?.status;
+    const errorCode = error.response?.data?.code;
+    const originalRequest = error.config as RetryableAxiosRequestConfig | undefined;
+
+    if (
+      status === 401 &&
+      errorCode === TOKEN_EXPIRED_CODE &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshResponse = await refreshClient.post<RefreshTokenResponse>('/api/v1/auth/refresh-token');
+
+        const newAccessToken = refreshResponse.data.data.accessToken;
+        const refreshedUser = refreshResponse.data.data.user;
+        localStorage.setItem('accessToken', newAccessToken);
+        localStorage.setItem('user', JSON.stringify(refreshedUser));
+        localStorage.setItem('isAuthenticated', 'true');
+        store.dispatch(
+          setAuth({
+            accessToken: newAccessToken,
+            refreshToken: null, //not stored in JS
+            user: refreshedUser
+          })
+        );
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        redirectToSignIn();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    if (status === 401) {
+      redirectToSignIn();
       return Promise.reject(error);
     }
       /**

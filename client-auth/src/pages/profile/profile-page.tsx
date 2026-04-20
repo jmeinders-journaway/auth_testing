@@ -1,6 +1,7 @@
 import { MailOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Button, Card, Divider, Typography } from 'antd';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import apiLayer from '../../api';
 import { clearAuth } from '../../redux/authSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 
@@ -11,12 +12,16 @@ export default function ProfilePage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handleLogOut = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    dispatch(clearAuth());
-    navigate('/sign-in');
+  const handleLogOut = async () => {
+    try {
+      await apiLayer.logout();
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
+      dispatch(clearAuth());
+      navigate('/sign-in');
+    }
   };
 
   return (
@@ -48,6 +53,9 @@ export default function ProfilePage() {
             <Paragraph style={{ maxWidth: '600px', textAlign: 'left' }}>
              'No bio available. Just random words'
             </Paragraph>
+            <Button type='primary' style={{ marginRight: '8px' }}>
+              <Link to='/asset'>Go to protected page (test)</Link>
+            </Button>
             <Button danger onClick={handleLogOut}>
               Log Out
             </Button>
