@@ -24,19 +24,13 @@ export default function SignUpPage() {
   const onFinish = async (values: SignUpPayload) => {
     const response = await apiLayer.signUp(values);
     if (response) {
-      if (!response.data.refreshToken || response.data.refreshToken === 'undefined') {
-        toast.error('Sign up response is missing refresh token. Please restart backend and try again.');
-        return;
-      }
-
       localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('isAuthenticated', 'true');
       dispatch(
         setAuth({
           accessToken: response.data.accessToken,
-          refreshToken: response.data.refreshToken,
+          refreshToken: null,
           user: response.data.user
         })
       );

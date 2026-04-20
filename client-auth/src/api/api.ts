@@ -1,14 +1,17 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
-import { clearAuth } from '../redux/authSlice';
+import { clearAuth, setAuth } from '../redux/authSlice';
 import { store } from '../redux/store';
+import type { IUser } from '../types/user';
 
 //creates Axios instance (library for making http request)
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050'
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050',
+  withCredentials: true
 });
 const refreshClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050'
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050',
+  withCredentials: true
 });
 
 const PUBLIC_AUTH_ROUTES = ['/api/v1/auth/sign-in', '/api/v1/auth/signup', '/api/v1/auth/refresh-token'];
@@ -23,6 +26,7 @@ interface ErrorResponse {
 interface RefreshTokenResponse {
   data: {
     accessToken: string;
+    user: IUser;
   };
 }
 
@@ -121,20 +125,22 @@ api.interceptors.response.use(
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        redirectToSignIn();
-        return Promise.reject(error);
-      }
 
       try {
-        const refreshResponse = await refreshClient.post<RefreshTokenResponse>(
-          '/api/v1/auth/refresh-token',
-          {refreshToken}
-        );
+        const refreshResponse = await refreshClient.post<RefreshTokenResponse>('/api/v1/auth/refresh-token');
 
         const newAccessToken = refreshResponse.data.data.accessToken;
+        const refreshedUser = refreshResponse.data.data.user;
         localStorage.setItem('accessToken', newAccessToken);
+        localStorage.setItem('user', JSON.stringify(refreshedUser));
+        localStorage.setItem('isAuthenticated', 'true');
+        store.dispatch(
+          setAuth({
+            accessToken: newAccessToken,
+            refreshToken: null,
+            user: refreshedUser
+          })
+        );
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return api(originalRequest);

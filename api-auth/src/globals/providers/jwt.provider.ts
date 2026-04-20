@@ -10,7 +10,7 @@ class JwtProvider {
     }
 
     return jwt.sign(payload, jwtSecret, {
-      expiresIn: '5s'
+      expiresIn: '20s'
     });
   }
 

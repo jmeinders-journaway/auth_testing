@@ -2,11 +2,23 @@ import { Request, Response } from 'express';
 import { authService } from '../services/auth.service';
 import HTTP_STATUS from '~/globals/constants/http.constant';
 
+const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
+const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 /**
  * AuthController Class
  * Handles all authentication-related HTTP requests
  */
 class AuthController {
+  private setRefreshTokenCookie = (res: Response, refreshToken: string) => {
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS
+    });
+  };
+
   /**
    * POST /api/v1/auth/signup
    * Registers a new user in the system
@@ -21,15 +33,19 @@ class AuthController {
    *
    * @returns Response with { message, data: { accessToken, user } }
    */
-  public async signUp(req: Request, res: Response) {
+  public signUp = async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
     const authData = await authService.signUp(name, email, password);
+    this.setRefreshTokenCookie(res, authData.refreshToken);
 
     res.status(HTTP_STATUS.CREATED).json({
       message: 'Sign up successfully',
-      data: authData
+      data: {
+        accessToken: authData.accessToken,
+        user: authData.user
+      }
     });
-  }
+  };
 
   /**
    * POST /api/v1/auth/sign-in
@@ -45,25 +61,29 @@ class AuthController {
    *
    * @returns Response with { message, data: { accessToken, user } }
    */
-  public async signIn(req: Request, res: Response) {
+  public signIn = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const authData = await authService.signIn(email, password);
+    this.setRefreshTokenCookie(res, authData.refreshToken);
 
     res.status(HTTP_STATUS.OK).json({
       message: 'Sign in successfully',
-      data: authData
+      data: {
+        accessToken: authData.accessToken,
+        user: authData.user
+      }
     });
-  }
+  };
 
-  public async refreshToken(req: Request, res: Response) {
-    const {refreshToken} = req.body;
+  public refreshToken = async (req: Request, res: Response) => {
+    const refreshToken = req.cookies?.refreshToken as string | undefined;
     const token = await authService.refreshToken(refreshToken);
 
     res.status(HTTP_STATUS.OK).json({
       message: 'Refresh token successfully',
       data: token
     });
-  }
+  };
 
   /**
    * GET /api/v1/auth/protected
@@ -75,12 +95,12 @@ class AuthController {
    * Important: This route is protected by auth.middleware.ts
    * @returns Response with message and current user data
    */
-  public async protected(req: Request, res: Response) {
+  public protected = async (req: Request, res: Response) => {
     res.status(HTTP_STATUS.OK).json({
       message: 'This is a protected route',
       data: req.currentUser
     });
-  }
+  };
 
   public async getCurrentUser(req: Request, res: Response) {}
 

@@ -26,7 +26,8 @@ class Server {
     // Allow requests from client app URL (or all origins if not provided).
     this.app.use(
       cors({
-        origin: process.env.CLIENT_URL || '*'
+        origin: process.env.CLIENT_URL || 'http://localhost:5173',
+        credentials: true
       })
     );
     this.app.use(express.json());

@@ -43,7 +43,7 @@ class AuthService {
     };
   }
 
-  public async refreshToken(refreshToken: string) {
+  public async refreshToken(refreshToken: string | undefined) {
     if (!refreshToken) {
       throw new BadRequestException('Please provide refresh token');
     }
@@ -61,9 +61,11 @@ class AuthService {
     }
 
     const newAccessToken = this.generateAuthToken(user);
+    const userWithoutPassword = this.excludePasswordFromUser(user);
 
     return {
-      accessToken: newAccessToken
+      accessToken: newAccessToken,
+      user: userWithoutPassword
     };
   }
 
@@ -113,7 +115,7 @@ class AuthService {
     return newUser;
   }
 
-  private async excludePasswordFromUser(user: InstanceType<typeof UserModel>) {
+  private excludePasswordFromUser(user: InstanceType<typeof UserModel>) {
     const {password, ...userWithoutPassword} = user.toObject();
     return userWithoutPassword;
   }

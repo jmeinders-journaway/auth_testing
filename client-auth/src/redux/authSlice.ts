@@ -60,7 +60,7 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{
         accessToken: string;
-        refreshToken: string;
+        refreshToken: string | null;
         user: IUser;
       }>,
     ) {
