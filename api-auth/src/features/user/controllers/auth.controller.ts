@@ -4,6 +4,12 @@ import HTTP_STATUS from '~/globals/constants/http.constant';
 
 const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
 const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const REFRESH_TOKEN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'strict' as const,
+  secure: process.env.NODE_ENV === 'production',
+  maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS
+};
 
 /**
  * AuthController Class
@@ -11,12 +17,11 @@ const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  */
 class AuthController {
   private setRefreshTokenCookie = (res: Response, refreshToken: string) => {
-    res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS
-    });
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+  };
+
+  private clearRefreshTokenCookie = (res: Response) => {
+    res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_OPTIONS);
   };
 
   /**
@@ -104,7 +109,12 @@ class AuthController {
 
   public async getCurrentUser(req: Request, res: Response) {}
 
-  public async logout(req: Request, res: Response) {}
+  public logout = async (req: Request, res: Response) => {
+    this.clearRefreshTokenCookie(res);
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Log out successfully'
+    });
+  };
 }
 
 export const authController: AuthController = new AuthController();
