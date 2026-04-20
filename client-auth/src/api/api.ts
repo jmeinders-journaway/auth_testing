@@ -4,11 +4,21 @@ import { clearAuth, setAuth } from '../redux/authSlice';
 import { store } from '../redux/store';
 import type { IUser } from '../types/user';
 
-//creates Axios instance (library for making http request)
+//creates Axios instance (library for making http request
+//includes interceptors for automatic token refresh
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050',
   withCredentials: true
 });
+
+/**
+ * client for token refresh requests.
+ *
+ * Why separate client?
+ * Using the main `api` client for refresh would cause infinite loops:
+ * Main client gets 401 -> tries to refresh
+ * Refresh request also fails with 401 -> tries to refresh again
+ */
 const refreshClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5050',
   withCredentials: true
@@ -137,7 +147,7 @@ api.interceptors.response.use(
         store.dispatch(
           setAuth({
             accessToken: newAccessToken,
-            refreshToken: null,
+            refreshToken: null, //not stored in JS
             user: refreshedUser
           })
         );

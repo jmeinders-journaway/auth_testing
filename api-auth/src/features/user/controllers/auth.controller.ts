@@ -5,9 +5,9 @@ import HTTP_STATUS from '~/globals/constants/http.constant';
 const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
 const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const REFRESH_TOKEN_COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: 'strict' as const,
-  secure: process.env.NODE_ENV === 'production',
+  httpOnly: true, //JavaScript can not access the cookie
+  sameSite: 'strict' as const, //only send to same domain, prevents csrf attacks
+  secure: process.env.NODE_ENV === 'production', 
   maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS
 };
 
@@ -16,15 +16,7 @@ const REFRESH_TOKEN_COOKIE_OPTIONS = {
  * Handles all authentication-related HTTP requests
  */
 class AuthController {
-  private setRefreshTokenCookie = (res: Response, refreshToken: string) => {
-    res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
-  };
-
-  private clearRefreshTokenCookie = (res: Response) => {
-    res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_OPTIONS);
-  };
-
-  /**
+    /**
    * POST /api/v1/auth/signup
    * Registers a new user in the system
    *
@@ -115,6 +107,16 @@ class AuthController {
       message: 'Log out successfully'
     });
   };
+
+  private setRefreshTokenCookie = (res: Response, refreshToken: string) => {
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+  };
+
+  private clearRefreshTokenCookie = (res: Response) => {
+    res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_OPTIONS);
+  };
 }
+
+
 
 export const authController: AuthController = new AuthController();
