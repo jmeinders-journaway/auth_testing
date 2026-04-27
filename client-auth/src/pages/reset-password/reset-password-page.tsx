@@ -1,19 +1,55 @@
 import { CheckOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
+import { toast } from 'react-toastify';
+import apiLayer from '../../api';
 
 const { Title, Paragraph } = Typography;
+
+interface ResetPasswordFormValues {
+  password: string;
+  confirmPassword: string;
+}
 
 export default function ResetPasswordPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const userEmail = 'user@example.com';
+  const userEmail = useMemo(() => searchParams.get('email'), [searchParams]);
+  const resetToken = useMemo(() => searchParams.get('token'), [searchParams]);
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    if (!userEmail || !resetToken) {
+      navigate('/forgot-password', { replace: true });
+      return;
+    }
+    form.setFieldValue('email', userEmail);
+  }, [form, navigate, resetToken, userEmail]);
+
+  const handleSubmit = async (values: ResetPasswordFormValues) => {
+    if (!userEmail || !resetToken) {
+      navigate('/forgot-password', { replace: true });
+      return;
+    }
     setLoading(true);
+    try {
+      const response = await apiLayer.resetPassword({
+        email: userEmail,
+        resetToken,
+        newPassword: values.password,
+        confirmNewPassword: values.confirmPassword
+      });
 
-    // call to reset password
+      if (response) {
+        toast.success('Reset password successfully');
+        navigate('/sign-in');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

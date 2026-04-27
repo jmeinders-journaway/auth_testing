@@ -3,6 +3,8 @@
 import { MailOutlined, SendOutlined } from '@ant-design/icons';
 import { Button, Card, Form, Input, Typography } from 'antd';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
+import apiLayer, { type ForgotPasswordPayload } from '../../api';
 
 const { Title, Paragraph } = Typography;
 
@@ -10,10 +12,17 @@ export default function ForgotPasswordPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async (values: ForgotPasswordPayload) => {
     setLoading(true);
-
-    // call to request password reset
+    try {
+      const response = await apiLayer.forgotPassword(values);
+      if (response) {
+        toast.success('Send reset password to your email successfully');
+        form.resetFields();
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

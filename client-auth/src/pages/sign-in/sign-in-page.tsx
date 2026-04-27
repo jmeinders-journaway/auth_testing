@@ -119,6 +119,9 @@ export default function SignInPage() {
         </Form>
 
         <div style={footerStyle}>
+          <Paragraph style={{ marginBottom: '8px' }}>
+            <Link to='/forgot-password'>Forgot password?</Link>
+          </Paragraph>
           <Paragraph style={{ color: 'rgba(0, 0, 0, 0.45)' }}>
             Don't have an account? <Link to='/sign-up'>Sign Up</Link>
           </Paragraph>

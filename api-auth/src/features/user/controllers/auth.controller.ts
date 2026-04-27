@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { BadRequestException } from '~/globals/cores/error.core';
 import { authService } from '../services/auth.service';
 import HTTP_STATUS from '~/globals/constants/http.constant';
 
@@ -83,6 +84,34 @@ class AuthController {
   };
 
   /**
+   * POST /api/v1/auth/forgot-password
+   * Creates reset-password token and stores expiry on user record.
+   */
+  public forgotPassword = async (req: Request, res: Response) => {
+    const {email} = req.body;
+    const resetData = await authService.forgotPassword(email);
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Reset password email sent successfully',
+      data: resetData
+    });
+  };
+
+  public resetPassword = async (req: Request, res: Response) => {
+    const { email, resetToken, token, newPassword, confirmNewPassword } = req.body;
+    await authService.resetPassword({
+      email,
+      resetToken: resetToken || token,
+      newPassword,
+      confirmNewPassword
+    });
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Reset password successfully'
+    });
+  };
+
+  /**
    * GET /api/v1/auth/protected
    * Example protected route that requires valid JWT token
    *
@@ -99,7 +128,28 @@ class AuthController {
     });
   };
 
-  public async getCurrentUser(req: Request, res: Response) {}
+  public getCurrentUser = async (req: Request, res: Response) => {
+    res.status(HTTP_STATUS.OK).json({
+      message: 'User information fetched successfully',
+      data: req.currentUser
+    });
+  };
+
+  public updateProfile = async (req: Request, res: Response) => {
+    const { name } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      throw new BadRequestException('Name is required');
+    }
+
+    const updatedUser = await authService.updateProfile(req.currentUser.id, name.trim());
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Profile updated successfully',
+      data: {
+        user: updatedUser
+      }
+    });
+  };
 
   public logout = async (req: Request, res: Response) => {
     this.clearRefreshTokenCookie(res);

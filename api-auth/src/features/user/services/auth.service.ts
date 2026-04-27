@@ -1,10 +1,14 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import UserModel from '../models/user.model';
 import {BadRequestException, NotFoundException, UnAuthorizedException} from '~/globals/cores/error.core';
 import {jwtProvider} from '~/globals/providers/jwt.provider';
-import {UserJwtPayload} from '../models/auth.model';
+import {ResetPasswordInput, UserJwtPayload} from '../models/auth.model';
+import { mailProvider } from '~/globals/providers/mail.provider';
 
 const SALT_ROUNDS = 10;
+const RESET_PASSWORD_TOKEN_BYTES = 32;
+const RESET_PASSWORD_EXPIRE_MS = 10 * 60 * 1000;
 const INVALID_CREDENTIALS_MESSAGE = 'Email or password is wrong';
 
 /**
@@ -69,6 +73,73 @@ class AuthService {
     };
   }
 
+  public async forgotPassword(email: string) {
+    if (!email) {
+      throw new BadRequestException('Please provide email');
+    }
+
+    const user = await UserModel.findOne({email});
+    if (!user) {
+      throw new NotFoundException('User does not exist');
+    }
+
+    // Generate a secure random token for reset-password flow.
+    const resetPasswordToken = crypto.randomBytes(RESET_PASSWORD_TOKEN_BYTES).toString('hex');
+    // Keep token valid for 10 minutes.
+    const resetPasswordExpires = Date.now() + RESET_PASSWORD_EXPIRE_MS;
+
+    user.resetPasswordToken = resetPasswordToken;
+    user.resetPasswordExpires = resetPasswordExpires;
+    await user.save();
+
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const resetUrl = `${clientUrl}/reset-password?email=${encodeURIComponent(user.email)}&token=${resetPasswordToken}`;
+
+    await mailProvider.sendEmail({
+      to: user.email,
+      subject: 'Reset password request',
+      text: `Your reset password request. Click this link to reset your password: ${resetUrl}`,
+      html: `<p>Your reset password request.</p><p>Click <a href="${resetUrl}">here</a> to reset your password.</p>`
+    });
+
+    return {
+      message: 'Reset password email sent successfully'
+    };
+  }
+
+  public async resetPassword(input: ResetPasswordInput) {
+    const { email, resetToken, newPassword, confirmNewPassword } = input;
+
+    if (!email || !resetToken || !newPassword || !confirmNewPassword) {
+      throw new BadRequestException('Please provide email, reset token, new password and confirm password');
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      throw new BadRequestException('New password and confirm password are not the same');
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException('User does not exist');
+    }
+
+    if (!user.resetPasswordToken || !user.resetPasswordExpires) {
+      throw new BadRequestException('Please request forgot password again');
+    }
+
+    const isTokenInvalid = user.resetPasswordToken !== resetToken;
+    const isTokenExpired = Date.now() > user.resetPasswordExpires;
+    if (isTokenInvalid || isTokenExpired) {
+      throw new BadRequestException('Your reset password request already expired. Please try again');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+  }
+
   private async verifyPassword(password: string, userByEmail: InstanceType<typeof UserModel>) {
     const matchedPassword = await bcrypt.compare(password, userByEmail.password);
     if (!matchedPassword) {
@@ -113,6 +184,22 @@ class AuthService {
 
     await newUser.save();
     return newUser;
+  }
+
+  public async updateProfile(userId: string, name: string) {
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      throw new BadRequestException('Name is required');
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.name = name.trim();
+    await user.save();
+
+    return this.excludePasswordFromUser(user);
   }
 
   private excludePasswordFromUser(user: InstanceType<typeof UserModel>) {
